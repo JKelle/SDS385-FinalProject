@@ -1,4 +1,5 @@
 
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -11,17 +12,15 @@
 #define WIDTH 640
 #define HEIGHT 360
 #define NUM_LABELS 256
-#define LAMBDA1 8
-#define LAMBDA2 1
 
 int compute_energy(GCoptimizationGridGraph *gc) {
 	std::cout << "computing energy ..." << std::endl;
 	return gc->compute_energy();
 }
 
-void write(int* result, int i) {
-	char filename[20];
-	sprintf(filename, "output%02d_%d.res", LAMBDA, i);
+void write(int* result, int i, int lambda1, int lambda2) {
+	char filename[100];
+	sprintf(filename, "../smoothedOutput/gray_%03d_%03d_%d.res", lambda1, lambda2, i);
 	std::cout << "writing to output file " << filename << " ..." << std::endl;
 
 	std::ofstream file(filename);
@@ -39,7 +38,9 @@ void write(int* result, int i) {
 }
 
 
-int main() {
+int main(int argc, char* argv[]) {
+	int lambda1 = atoi(argv[1]);
+	int lambda2 = atoi(argv[2]);
 	int num_pixels = WIDTH * HEIGHT;
 	int label;
 
@@ -61,7 +62,7 @@ int main() {
 	int *smooth = new int[NUM_LABELS*NUM_LABELS];
 	for (int l1 = 0; l1 < NUM_LABELS; l1++)
 		for (int l2 = 0; l2 < NUM_LABELS; l2++)
-			smooth[l1+l2*NUM_LABELS] = LAMBDA1 * std::min(LAMBDA2, abs(l1 - l2));
+			smooth[l1+l2*NUM_LABELS] = lambda1 * std::min(lambda2, abs(l1 - l2));
 
 	int *result = new int[num_pixels];   // stores result of optimization
 
@@ -83,7 +84,7 @@ int main() {
 			for (int i = 0; i < num_pixels; i++) {
 				result[i] = gc->whatLabel(i);
 			}
-			write(result, i);
+			write(result, i, lambda1, lambda2);
 		}
 
 
