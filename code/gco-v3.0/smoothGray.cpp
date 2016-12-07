@@ -20,7 +20,7 @@ int compute_energy(GCoptimizationGridGraph *gc) {
 
 void write(int* result, int i, int lambda1, int lambda2) {
 	char filename[100];
-	sprintf(filename, "../smoothedOutput/gray_%03d_%03d_%d.res", lambda1, lambda2, i);
+	sprintf(filename, "/Users/jkelle/Desktop/StatsProject/results/cartoon/gray/gray_%04d_%03d_%02d.txt", lambda1, lambda2, i);
 	std::cout << "writing to output file " << filename << " ..." << std::endl;
 
 	std::ofstream file(filename);
@@ -37,10 +37,18 @@ void write(int* result, int i, int lambda1, int lambda2) {
 	}
 }
 
-
+/**
+ * This program invokes alpha-expansion on a grayscale image.
+ * Pixels of the input (noisey) grayscale image are read from stdin.
+ * Pixels of the output (smoothed) grayscale are written to disk in a .txt file.
+ *
+ * D(ui, vi) = (ui - vi)^2
+ * V(ui, uj) = lambda1 * min(lambda2, |ui - uj|)
+ */
 int main(int argc, char* argv[]) {
 	int lambda1 = atoi(argv[1]);
 	int lambda2 = atoi(argv[2]);
+	int num_iterations = atoi(argv[3]);
 	int num_pixels = WIDTH * HEIGHT;
 	int label;
 
@@ -73,13 +81,16 @@ int main(int argc, char* argv[]) {
 		gc->setSmoothCost(smooth);
 
 		int energy = compute_energy(gc);
+		int prev_energy = energy + 1;
 		printf("before optimization, energy is %lld\n", energy);
 
 		std::cout << "beginning optimization ..." << std::endl;
-		for (int i = 1; i < 10; i++) {
-			gc->expansion(1);// run expansion for 2 iterations. For swap use gc->swap(num_iterations);
-			int energy = compute_energy(gc);
-			printf("after %lld iterations, energy is %lld\n", i, energy);
+		for (int i = 1; i <= num_iterations && prev_energy != energy; i++) {
+			std::cout << "running another cycle of alpha-expansion ..." << std::endl;
+			gc->expansion(1);  // run expansion for 1 cycle.
+			prev_energy = energy;
+			energy = compute_energy(gc);
+			printf("after %lld cycles, energy is %lld\n", i, energy);
 
 			for (int i = 0; i < num_pixels; i++) {
 				result[i] = gc->whatLabel(i);
